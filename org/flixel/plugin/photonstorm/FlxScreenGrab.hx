@@ -15,10 +15,13 @@ import flash.geom.Rectangle;
 import flash.display.Bitmap;
 import flash.display.BitmapData;
 import flash.geom.Matrix;
+#if flash
 import flash.net.FileReference;
+#end
 import flash.utils.ByteArray;
 import flash.Lib;
 import org.flixel.FlxBasic;
+import org.flixel.FlxG;
 
 /**
  * Captures a screen grab of the game and stores it locally, optionally saving as a PNG.
@@ -142,20 +145,31 @@ class FlxScreenGrab extends FlxBasic
 			return;
 		}
 		
-		var png:ByteArray = PNGEncoder.encode(screenshot.bitmapData);
-		
-		var file:FileReference = new FileReference();
-		
 		if (filename == "")
 		{
-			filename = "grab" + Lib.getTimer() + ".png";
+			var date:String = Date.now().toString();
+			var nameArray:Array<String> = date.split(":");
+			date = nameArray.join("-");
+			
+			filename = "grab-" + date + ".png";
 		}
 		else if (filename.substr( -4) != ".png")
 		{
 			filename = filename + ".png";
 		}
 		
+		#if flash
+		var png:ByteArray = PNGEncoder.encode(screenshot.bitmapData);
+		
+		var file:FileReference = new FileReference();
+		
 		file.save(png, filename);
+		#else
+		var png:ByteArray = screenshot.bitmapData.encode('x');
+		var f = sys.io.File.write(filename, true);
+		f.writeString(png.readUTFBytes(png.length));
+		f.close();
+		#end
 	}
 	
 	override public function update():Void
